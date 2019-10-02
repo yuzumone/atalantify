@@ -22,7 +22,7 @@ void launchURL(String url) async {
   }
 }
 
-void setToken(Token token) async {
+Future<void> setToken(Token token) async {
   SharedPreferences _prefs = await SharedPreferences.getInstance();
   await _prefs.setString(tokenKey, token.token);
   await _prefs.setInt(expiresKey, token.expires);
