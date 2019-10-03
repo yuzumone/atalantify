@@ -1,4 +1,12 @@
+import 'package:atalantify/api/client.dart';
+import 'package:atalantify/model/_model.dart';
 import 'package:flutter/material.dart';
+import 'package:share/share.dart';
+import 'package:provider/provider.dart';
+
+import 'api/auth.dart';
+import 'model/token.dart';
+import 'utils.dart';
 
 void main() => runApp(MyApp());
 
@@ -6,57 +14,136 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const _StatefulProvider(
+        child: _HomePage(),
+      ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
+class _StatefulProvider extends StatefulWidget {
+  const _StatefulProvider({
+    Key key,
+    @required this.child,
+  }) : super(key: key);
+
+  final Widget child;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _StatefulProviderState createState() => _StatefulProviderState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _StatefulProviderState extends State<_StatefulProvider> {
+  CurrentlyPlaying _playing;
+  Token _token;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _initToken();
   }
 
   @override
   Widget build(BuildContext context) {
+    return Provider.value(
+      value: _playing,
+      child: Provider.value(
+        value: this,
+        child: widget.child,
+      ),
+    );
+  }
+
+  _initToken() {
+    getKey().then((key) {
+      var clientId = key['client_id'];
+      var clientSecret = key['client_secret'];
+      getToken().then((token) {
+        if (token == null) {
+          authSpotify(clientId, clientSecret).then((apiToken) {
+            _token = apiToken;
+            setToken(apiToken);
+            updateCurrentPlaying();
+          });
+        } else {
+          refreshToken(clientId, clientSecret, token).then((apiToken) {
+            _token = apiToken;
+            setToken(apiToken);
+            updateCurrentPlaying();
+          });
+        }
+      });
+    });
+  }
+
+  updateCurrentPlaying() {
+    var client = SpotifyClient(_token);
+    client.getCurrentlyPlaying().then((playing) {
+      setState(() => _playing = playing);
+    });
+  }
+}
+
+class _HomePage extends StatelessWidget {
+  const _HomePage({Key key}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text('atalantify'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: const _PlayingButton(),
+      ),
+    );
+  }
+}
+
+class _PlayingButton extends StatelessWidget {
+  const _PlayingButton({Key key}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    var _playing = Provider.of<CurrentlyPlaying>(context);
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        RaisedButton(
+          child: Text('Share track'),
+          onPressed: () {
+            Provider.of<_StatefulProviderState>(context, listen: false)
+                .updateCurrentPlaying();
+            if (_playing != null) {
+              print(_playing.isPlaying);
+              Share.share(_playing.item.externalUrls['spotify']);
+            }
+          },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ),
+        RaisedButton(
+          child: Text('Open Album'),
+          onPressed: () {
+            Provider.of<_StatefulProviderState>(context, listen: false)
+                .updateCurrentPlaying();
+            if (_playing != null) {
+              launchURL(_playing.item.album.externalUrls['spotify']);
+            }
+          },
+        ),
+        RaisedButton(
+          child: Text('Open Artist'),
+          onPressed: () {
+            Provider.of<_StatefulProviderState>(context, listen: false)
+                .updateCurrentPlaying();
+            if (_playing != null) {
+              launchURL(_playing.item.artists.first.externalUrls['spotify']);
+            }
+          },
+        ),
+      ],
     );
   }
 }
