@@ -8,7 +8,6 @@
 .buildlog/
 .history
 .svn/
-assets/.apikeys
 
 # IntelliJ related
 *.iml
@@ -29,6 +28,7 @@ assets/.apikeys
 .pub-cache/
 .pub/
 /build/
+pubspec.lock
 
 # Android related
 **/android/**/gradle-wrapper.jar
