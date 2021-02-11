@@ -1,7 +1,6 @@
 name: atalantify
-description: Spotify support application.
-
-version: 1.0.0+1
+description: Spotify connect transfer from shortcuts.
+version: 1.0.0
 
 environment:
   sdk: ">=2.1.0 <3.0.0"
@@ -9,22 +8,24 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^0.1.2
-  url_launcher: ^5.1.2
+  url_launcher: ^5.7.10
   http: ^0.12.0+2
   shared_preferences: ^0.5.3+4
-  json_annotation: ^3.0.0
-  share: ^0.6.2+1
-  provider: ^3.1.0
-  quick_actions: ^0.3.2+2
+  flutter_riverpod: ^0.12.3
+  hooks_riverpod: ^0.12.3
+  riverpod: ^0.12.3
+  flutter_webview_plugin: ^0.3.11
+  freezed_annotation: ^0.12.0
+  fluttertoast: ^7.1.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  json_serializable: ^3.2.2
-  build_runner: ^1.7.0
+  test: ^1.6.0
+  pedantic: ^1.8.0
+  json_serializable:
+  build_runner:
+  freezed:
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/
